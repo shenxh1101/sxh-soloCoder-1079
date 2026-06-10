@@ -19,8 +19,12 @@
           <button class="nav-link active" data-view="create">✨ 创建</button>
           <button class="nav-link" data-view="decrypt">🔓 解密</button>
           <button class="nav-link" data-view="plaza">🏛️ 广场</button>
+          <button class="nav-link" data-view="library">📚 我的胶囊</button>
         </div>
-        <button class="export-btn" id="export-all-btn" title="导出所有数据">📦 导出</button>
+        <div style="display: flex; gap: var(--spacing-sm);">
+          <button class="export-btn" id="import-backup-btn" title="导入备份数据">📥 导入</button>
+          <button class="export-btn" id="export-all-btn" title="导出所有数据">📦 导出</button>
+        </div>
       </div>
     </nav>
 
@@ -190,6 +194,21 @@
 
         <div id="capsules-grid" class="capsules-grid"></div>
       </section>
+
+      <section id="view-library" class="view">
+        <div class="plaza-filters animate-fade-in-up delay-300">
+          <input type="text" id="library-search" placeholder="🔍 搜索胶囊标题...">
+          <select id="library-filter">
+            <option value="all">全部胶囊</option>
+            <option value="public">公开胶囊</option>
+            <option value="private">私密胶囊</option>
+            <option value="unlocked">已解锁</option>
+            <option value="locked">未解锁</option>
+          </select>
+        </div>
+
+        <div id="library-grid" class="capsules-grid"></div>
+      </section>
     </main>
   </div>
 
@@ -205,6 +224,7 @@
   <script src="js/views/create.js"></script>
   <script src="js/views/decrypt.js"></script>
   <script src="js/views/plaza.js"></script>
+  <script src="js/views/library.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

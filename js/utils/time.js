@@ -1,6 +1,10 @@
 const TimeUtils = {
   formatTimestamp(timestamp) {
-    const date = new Date(timestamp * 1000);
+    let ts = timestamp;
+    if (ts > 1000000000000) {
+      ts = ts / 1000;
+    }
+    const date = new Date(ts * 1000);
     return date.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',

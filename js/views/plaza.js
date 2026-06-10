@@ -356,7 +356,7 @@ const PlazaView = {
           <h4>👥 接收者</h4>
           ${capsule.recipients.map((r, i) => `
             <div class="recipient-item">
-              <span class="recipient-email">${r.email}</span>
+              <span class="recipient-email">${this.escapeHtml(r.email)}</span>
               <span class="recipient-status">#${i + 1}</span>
             </div>
           `).join('')}
@@ -421,6 +421,14 @@ const PlazaView = {
   addCapsule(capsule) {
     if (capsule.meta.isPublic && !this.capsules.find(c => c.id === capsule.id)) {
       this.capsules.push(capsule);
+      this.render();
+    }
+  },
+
+  removeCapsule(capsuleId) {
+    const initialLength = this.capsules.length;
+    this.capsules = this.capsules.filter(c => c.id !== capsuleId);
+    if (this.capsules.length !== initialLength) {
       this.render();
     }
   },

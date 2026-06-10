@@ -62,9 +62,15 @@ const DecryptView = {
     try {
       const data = await FileUtils.readJSONFile(file);
       
+      const versionValidation = this.validateCapsuleVersion(data);
+      if (!versionValidation.valid) {
+        this.showCapsuleLoadError(versionValidation.errors);
+        return;
+      }
+
       const validation = CapsuleModel.validate(data);
       if (!validation.valid) {
-        Notification.error('无效的胶囊文件: ' + validation.errors.join(', '));
+        this.showCapsuleLoadError(validation.errors);
         return;
       }
 
@@ -78,6 +84,71 @@ const DecryptView = {
       console.error('加载文件失败:', error);
       Notification.error('加载失败: ' + error.message);
     }
+  },
+
+  validateCapsuleVersion(capsule) {
+    const errors = [];
+    
+    if (!capsule) {
+      errors.push('文件为空');
+      return { valid: false, errors };
+    }
+    
+    if (!capsule.version) {
+      errors.push('缺少版本号，可能是不兼容的旧版本胶囊文件');
+      return { valid: false, errors };
+    }
+    
+    if (StorageUtils.compareVersions(capsule.version, StorageUtils.MIN_SUPPORTED_CAPSULE_VERSION) < 0) {
+      errors.push(`胶囊文件版本(${capsule.version})过低，最低支持版本为v${StorageUtils.MIN_SUPPORTED_CAPSULE_VERSION}`);
+      return { valid: false, errors };
+    }
+    
+    if (StorageUtils.compareVersions(capsule.version, StorageUtils.CAPSULE_VERSION) > 0) {
+      errors.push(`胶囊文件版本(${capsule.version})过高，请更新工具到最新版本`);
+      return { valid: false, errors };
+    }
+    
+    return { valid: true, errors };
+  },
+
+  showCapsuleLoadError(errors) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <h2 style="color: var(--color-error);">❌ 无法加载胶囊文件</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error); border-radius: var(--radius-md); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+          <h3 style="color: var(--color-error); margin-bottom: var(--spacing-md);">错误原因：</h3>
+          <ul style="color: var(--color-text-primary); margin-left: var(--spacing-lg);">
+            ${errors.map(e => `<li>${e}</li>`).join('')}
+          </ul>
+        </div>
+        
+        <div style="background: var(--color-bg-secondary); border-radius: var(--radius-md); padding: var(--spacing-md);">
+          <p style="color: var(--color-text-muted); font-size: 0.9rem;">
+            💡 <strong>建议：</strong>请确保使用的是从本工具导出的胶囊文件，当前支持的胶囊文件版本为 v${StorageUtils.MIN_SUPPORTED_CAPSULE_VERSION} 到 v${StorageUtils.CAPSULE_VERSION}。
+          </p>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-lg);" id="close-error-modal">
+          知道了
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => document.body.removeChild(modal);
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelector('#close-error-modal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
   },
 
   async renderCapsuleInfo() {
@@ -135,7 +206,7 @@ const DecryptView = {
       <h4>👥 接收者列表 (${recipients.length}人)</h4>
       ${recipients.map((r, index) => `
         <div class="recipient-item">
-          <span class="recipient-email">${r.email}</span>
+          <span class="recipient-email">${this.escapeHtml(r.email)}</span>
           <span class="recipient-status">#${index + 1}</span>
         </div>
       `).join('')}
@@ -264,7 +335,7 @@ const DecryptView = {
       <div style="margin-bottom: var(--spacing-md); padding: var(--spacing-sm); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-sm); border-left: 3px solid var(--color-success);">
         <span style="color: var(--color-success);">✓</span>
         <span style="margin-left: var(--spacing-xs); color: var(--color-text-secondary); font-size: 0.9rem;">
-          接收者: <strong style="color: var(--color-text-primary);">${recipient.email}</strong>
+          接收者: <strong style="color: var(--color-text-primary);">${this.escapeHtml(recipient.email)}</strong>
         </span>
       </div>
       <div class="message-unlocked">${this.escapeHtml(message)}</div>

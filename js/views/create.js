@@ -94,8 +94,8 @@ const CreateView = {
 
     container.innerHTML = this.recipients.map(email => `
       <div class="recipient-tag">
-        <span>${email}</span>
-        <button type="button" data-email="${email}" aria-label="移除">×</button>
+        <span>${this.escapeHtml(email)}</span>
+        <button type="button" data-email="${this.escapeHtml(email)}" aria-label="移除">×</button>
       </div>
     `).join('');
 
@@ -160,12 +160,15 @@ const CreateView = {
       const filename = FileUtils.generateCapsuleFilename(finalizedCapsule);
       FileUtils.downloadJSON(finalizedCapsule, filename);
 
-      if (finalizedCapsule.meta.isPublic) {
-        StorageUtils.addMyCapsule(finalizedCapsule.id);
-        localStorage.setItem(`capsule_${finalizedCapsule.id}`, JSON.stringify(finalizedCapsule));
-        if (window.PlazaView) {
-          window.PlazaView.addCapsule(finalizedCapsule);
-        }
+      StorageUtils.addMyCapsule(finalizedCapsule.id, finalizedCapsule, recipientCodes);
+      localStorage.setItem(`capsule_${finalizedCapsule.id}`, JSON.stringify(finalizedCapsule));
+      
+      if (finalizedCapsule.meta.isPublic && window.PlazaView) {
+        window.PlazaView.addCapsule(finalizedCapsule);
+      }
+      
+      if (window.LibraryView) {
+        window.LibraryView.addCapsule(finalizedCapsule);
       }
 
       this.showExtractedCodes(finalizedCapsule, recipientCodes, filename);
@@ -283,7 +286,7 @@ const CreateView = {
         <h3 style="color: var(--color-accent-cyan); margin-bottom: var(--spacing-md);">📋 胶囊预览</h3>
         <div style="margin-bottom: var(--spacing-sm);">
           <span style="color: var(--color-text-muted);">标题：</span>
-          <span style="font-family: var(--font-display);">${preview.meta.title}</span>
+          <span style="font-family: var(--font-display);">${this.escapeHtml(preview.meta.title)}</span>
         </div>
         <div style="margin-bottom: var(--spacing-sm);">
           <span style="color: var(--color-text-muted);">解锁时间：</span>
@@ -304,6 +307,13 @@ const CreateView = {
     if (existingPreview) {
       existingPreview.innerHTML = previewHtml;
     }
+  },
+
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 };
 
