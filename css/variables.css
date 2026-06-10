@@ -1,0 +1,48 @@
+:root {
+  --color-bg-primary: #0a0e27;
+  --color-bg-secondary: #121a3d;
+  --color-bg-card: rgba(18, 26, 61, 0.6);
+  --color-bg-glass: rgba(255, 255, 255, 0.05);
+  
+  --color-accent-purple: #8b5cf6;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-pink: #ec4899;
+  --color-accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+  --color-accent-gradient-reverse: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+  
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  
+  --color-border: rgba(139, 92, 246, 0.3);
+  --color-border-glow: rgba(6, 182, 212, 0.5);
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  
+  --font-display: 'JetBrains Mono', monospace;
+  --font-body: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  
+  --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
+  --shadow-glow-cyan: 0 0 20px rgba(6, 182, 212, 0.3);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  --blur-bg: blur(20px);
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+}

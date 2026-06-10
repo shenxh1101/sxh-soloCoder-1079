@@ -1,0 +1,196 @@
+[
+  {
+    "id": "mock-001",
+    "version": "1.0",
+    "meta": {
+      "title": "给2027年的自己",
+      "creator": "时空旅行者",
+      "createdAt": 1718000000,
+      "unlockAt": 1814544000,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 123456789,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "future@example.com",
+        "codeHash": "abc123def456"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash123",
+      "algorithm": "SHA-256"
+    }
+  },
+  {
+    "id": "mock-002",
+    "version": "1.0",
+    "meta": {
+      "title": "新年愿望清单",
+      "creator": "梦想家小王",
+      "createdAt": 1718500000,
+      "unlockAt": 1735660800,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 987654321,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "wish@example.com",
+        "codeHash": "def789ghi012"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash456",
+      "algorithm": "SHA-256"
+    }
+  },
+  {
+    "id": "mock-003",
+    "version": "1.0",
+    "meta": {
+      "title": "毕业季的约定",
+      "creator": "青春不散场",
+      "createdAt": 1717000000,
+      "unlockAt": 1908268800,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 111111111,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "classmate1@example.com",
+        "codeHash": "ghi345jkl678"
+      },
+      {
+        "email": "classmate2@example.com",
+        "codeHash": "jkl901mno234"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash789",
+      "algorithm": "SHA-256"
+    }
+  },
+  {
+    "id": "mock-004",
+    "version": "1.0",
+    "meta": {
+      "title": "给未出生的孩子",
+      "creator": "期待的父母",
+      "createdAt": 1719000000,
+      "unlockAt": 1851350400,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 222222222,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "baby@example.com",
+        "codeHash": "mno567pqr890"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash012",
+      "algorithm": "SHA-256"
+    }
+  },
+  {
+    "id": "mock-005",
+    "version": "1.0",
+    "meta": {
+      "title": "一周年纪念",
+      "creator": "小情侣",
+      "createdAt": 1715000000,
+      "unlockAt": 1746536400,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 333333333,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "love1@example.com",
+        "codeHash": "pqr789stu012"
+      },
+      {
+        "email": "love2@example.com",
+        "codeHash": "stu345vwx678"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash345",
+      "algorithm": "SHA-256"
+    }
+  },
+  {
+    "id": "mock-006",
+    "version": "1.0",
+    "meta": {
+      "title": "紧急备用消息",
+      "creator": "应急小组",
+      "createdAt": 1716000000,
+      "unlockAt": 1719000000,
+      "isPublic": true,
+      "encryption": {
+        "algorithm": "AES-GCM",
+        "keySeed": 444444444,
+        "iterations": 100000
+      }
+    },
+    "recipients": [
+      {
+        "email": "admin@example.com",
+        "codeHash": "vwx901yzs234"
+      }
+    ],
+    "data": {
+      "ciphertext": "VGhpcyBpcyBhIHRlc3QgbWVzc2FnZQ==",
+      "iv": "dGVzdGl2",
+      "tag": "dGVzdHRhZw=="
+    },
+    "integrity": {
+      "hash": "mockhash678",
+      "algorithm": "SHA-256"
+    }
+  }
+]

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时间胶囊 - Time Capsule</title>
+  <meta name="description" content="创建加密的时间胶囊，将消息封印在时间中，只有到达预设的未来时刻才能解锁">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="nav">
+      <div class="nav-content">
+        <div class="logo">
+          <span class="logo-icon">⏳</span>
+          <span class="logo-text">时间胶囊</span>
+        </div>
+        <div class="nav-links">
+          <button class="nav-link active" data-view="create">✨ 创建</button>
+          <button class="nav-link" data-view="decrypt">🔓 解密</button>
+          <button class="nav-link" data-view="plaza">🏛️ 广场</button>
+        </div>
+        <button class="export-btn" id="export-all-btn" title="导出所有数据">📦 导出</button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="hero">
+        <h1 class="animate-fade-in-up">✨ 创建时间胶囊</h1>
+        <p class="animate-fade-in-up delay-200">将你的消息封印在时间中，只有到达预设的未来时刻才能解锁</p>
+      </div>
+
+      <section id="view-create" class="view active">
+        <div class="card animate-fade-in-up delay-300">
+          <form id="create-form">
+            <div class="form-group">
+              <label for="capsule-title">📝 胶囊标题（可选）</label>
+              <input type="text" id="capsule-title" placeholder="给这个时间胶囊起个名字..." maxlength="50">
+            </div>
+
+            <div class="form-group">
+              <label for="creator-name">👤 创建者名称（可选）</label>
+              <input type="text" id="creator-name" placeholder="你的名字或昵称..." maxlength="30">
+            </div>
+
+            <div class="form-group">
+              <label for="capsule-message">💌 胶囊消息</label>
+              <textarea id="capsule-message" placeholder="写下你想要封存的消息..." required></textarea>
+              <div class="hint">这是将要被加密封存的内容，只有到达解锁时间后才能被阅读</div>
+            </div>
+
+            <div class="form-group">
+              <label for="unlock-time">⏰ 解锁时间</label>
+              <input type="datetime-local" id="unlock-time" required>
+              <div class="hint">设置一个未来的时间点，只有到达这个时间后才能解锁消息</div>
+            </div>
+
+            <div class="form-group">
+              <label>🔐 加密方式</label>
+              <div class="encryption-options">
+                <div class="encryption-card selected" data-algorithm="AES-GCM">
+                  <h4>AES-GCM</h4>
+                  <p>基于时间戳生成密钥，结合解锁时间加密，提供机密性和完整性保护</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>👥 接收者邮箱</label>
+              <div id="recipients-list" class="recipients-list">
+                <p style="color: var(--color-text-muted); font-size: 0.9rem;">还没有添加接收者</p>
+              </div>
+              <div class="add-recipient">
+                <input type="email" id="recipient-email" placeholder="输入接收者邮箱地址...">
+                <button type="button" class="btn btn-secondary btn-sm" id="add-recipient">添加</button>
+              </div>
+              <div class="hint">每个接收者将获得一个唯一的提取码</div>
+            </div>
+
+            <div class="form-group">
+              <label class="switch">
+                <input type="checkbox" id="is-public" checked>
+                <span class="switch-slider"></span>
+                <span>在胶囊广场公开显示（不显示消息内容）</span>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-xl);">
+              <button type="button" class="btn btn-secondary" style="flex: 1;" id="preview-capsule">
+                👁️ 预览
+              </button>
+              <button type="submit" class="btn btn-primary" style="flex: 2;" id="submit-btn">
+                ✨ 创建时间胶囊
+              </button>
+            </div>
+          </form>
+
+          <div id="capsule-preview"></div>
+        </div>
+      </section>
+
+      <section id="view-decrypt" class="view">
+        <div class="card animate-fade-in-up delay-300">
+          <div class="upload-area" id="upload-area">
+            <span class="upload-icon">📁</span>
+            <h3>上传胶囊文件</h3>
+            <p>点击或拖拽JSON文件到此处</p>
+            <input type="file" id="capsule-file" accept=".json" style="display: none;">
+          </div>
+        </div>
+
+        <div id="capsule-info" style="display: none; margin-top: var(--spacing-xl);">
+          <div class="card animate-fade-in-up">
+            <h2 id="capsule-title-display" style="margin-bottom: var(--spacing-lg); color: var(--color-accent-cyan);"></h2>
+            
+            <div id="integrity-status" class="integrity-status" style="display: none;"></div>
+
+            <div class="countdown-display">
+              <div class="countdown-label">⏳ 距离解锁还有</div>
+              <div id="decrypt-countdown"></div>
+            </div>
+
+            <div class="meta-info">
+              <div class="meta-item">
+                <div class="meta-item-label">创建者</div>
+                <div class="meta-item-value" id="capsule-creator"></div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-item-label">创建时间</div>
+                <div class="meta-item-value" id="capsule-created"></div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-item-label">解锁时间</div>
+                <div class="meta-item-value" id="capsule-unlock"></div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-item-label">加密算法</div>
+                <div class="meta-item-value" id="capsule-algorithm"></div>
+              </div>
+            </div>
+
+            <div id="recipients-display" class="recipients-display"></div>
+
+            <button class="btn btn-secondary" style="width: 100%; margin-bottom: var(--spacing-lg);" id="verify-integrity">
+              🔍 验证完整性
+            </button>
+          </div>
+        </div>
+
+        <div id="decrypt-section" style="display: none; margin-top: var(--spacing-xl);">
+          <div class="card animate-fade-in-up">
+            <h3 style="margin-bottom: var(--spacing-lg);">🔓 解密消息</h3>
+            
+            <div class="form-group">
+              <label for="extract-code">🔑 输入提取码</label>
+              <input type="text" id="extract-code" placeholder="请输入8位提取码..." maxlength="8" style="font-family: var(--font-display); letter-spacing: 4px; text-transform: uppercase;">
+              <div class="hint">提取码由创建者分发给每个接收者</div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" id="decrypt-btn" disabled>
+              ⏳ 等待解锁
+            </button>
+
+            <div id="message-display" class="message-container" style="margin-top: var(--spacing-xl);">
+              <div class="message-locked">
+                <span class="lock-icon">🔒</span>
+                <p>加载胶囊文件后可以查看消息</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-plaza" class="view">
+        <div class="plaza-filters animate-fade-in-up delay-300">
+          <input type="text" id="search-capsules" placeholder="🔍 搜索胶囊标题或创建者...">
+          <select id="filter-status">
+            <option value="all">全部状态</option>
+            <option value="locked">已封印</option>
+            <option value="today">今日解锁</option>
+            <option value="unlocked">已解锁</option>
+          </select>
+          <select id="sort-by">
+            <option value="newest">最新创建</option>
+            <option value="oldest">最早创建</option>
+            <option value="unlock-soon">即将解锁</option>
+            <option value="most-liked">最多点赞</option>
+          </select>
+        </div>
+
+        <div id="capsules-grid" class="capsules-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/utils/time.js"></script>
+  <script src="js/utils/file.js"></script>
+  <script src="js/utils/storage.js"></script>
+  <script src="js/crypto/hash.js"></script>
+  <script src="js/crypto/keygen.js"></script>
+  <script src="js/crypto/aes.js"></script>
+  <script src="js/models/capsule.js"></script>
+  <script src="js/components/notification.js"></script>
+  <script src="js/components/countdown.js"></script>
+  <script src="js/views/create.js"></script>
+  <script src="js/views/decrypt.js"></script>
+  <script src="js/views/plaza.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
