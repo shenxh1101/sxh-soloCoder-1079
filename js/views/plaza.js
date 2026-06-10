@@ -7,7 +7,7 @@ const PlazaView = {
   init() {
     this.bindEvents();
     this.loadMockData();
-    this.loadUserCapsules();
+    this.loadAllPublicCapsules();
   },
 
   async loadMockData() {
@@ -15,7 +15,11 @@ const PlazaView = {
       const response = await fetch('data/mock-capsules.json');
       if (response.ok) {
         const mockCapsules = await response.json();
-        this.capsules = [...this.capsules, ...mockCapsules];
+        mockCapsules.forEach(capsule => {
+          if (!this.capsules.find(c => c.id === capsule.id) && capsule.meta.isPublic) {
+            this.capsules.push(capsule);
+          }
+        });
         this.render();
       }
     } catch (e) {
@@ -23,7 +27,16 @@ const PlazaView = {
     }
   },
 
-  loadUserCapsules() {
+  loadAllPublicCapsules() {
+    this.capsules = this.capsules.filter(c => !c.id || !StorageUtils.getMyCapsules().includes(c.id));
+    
+    const allMyCapsules = StorageUtils.getAllMyCapsuleData();
+    allMyCapsules.forEach(capsule => {
+      if (capsule.meta && capsule.meta.isPublic && !this.capsules.find(c => c.id === capsule.id)) {
+        this.capsules.push(capsule);
+      }
+    });
+    
     const myCapsuleIds = StorageUtils.getMyCapsules();
     myCapsuleIds.forEach(id => {
       if (!this.capsules.find(c => c.id === id)) {
@@ -40,6 +53,12 @@ const PlazaView = {
         }
       }
     });
+    
+    this.render();
+  },
+
+  refresh() {
+    this.loadAllPublicCapsules();
   },
 
   bindEvents() {

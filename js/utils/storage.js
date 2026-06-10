@@ -11,6 +11,8 @@ const StorageUtils = {
       myCapsules: [],
       capsuleData: {},
       extractCodes: {},
+      shareLinks: {},
+      importReports: [],
       settings: {
         theme: 'dark',
         notifications: true
@@ -25,9 +27,13 @@ const StorageUtils = {
         const parsed = JSON.parse(data);
         const defaults = this.getDefaultData();
         return {
-          ...defaults,
-          ...parsed,
-          settings: { ...defaults.settings, ...parsed.settings }
+          capsules: parsed.capsules || defaults.capsules,
+          myCapsules: parsed.myCapsules || defaults.myCapsules,
+          capsuleData: parsed.capsuleData || defaults.capsuleData,
+          extractCodes: parsed.extractCodes || defaults.extractCodes,
+          shareLinks: parsed.shareLinks || defaults.shareLinks,
+          importReports: parsed.importReports || defaults.importReports,
+          settings: { ...defaults.settings, ...(parsed.settings || {}) }
         };
       }
     } catch (e) {
@@ -175,7 +181,185 @@ const StorageUtils = {
     if (data.extractCodes) {
       delete data.extractCodes[capsuleId];
     }
+    if (data.shareLinks) {
+      delete data.shareLinks[capsuleId];
+    }
     this.saveData(data);
+  },
+
+  getCapsuleMigrationStatus(capsuleId) {
+    const data = this.getData();
+    const capsule = data.capsuleData ? data.capsuleData[capsuleId] : null;
+    const extractCodes = data.extractCodes ? data.extractCodes[capsuleId] : null;
+    const storedCapsule = localStorage.getItem(`capsule_${capsuleId}`);
+
+    const status = {
+      capsuleId,
+      capsule,
+      hasCapsuleData: !!capsule,
+      hasExtractCodes: !!extractCodes && extractCodes.length > 0,
+      hasStoredFile: !!storedCapsule,
+      isPublic: capsule && capsule.meta && capsule.meta.isPublic,
+      issues: []
+    };
+
+    if (!capsule) {
+      status.issues.push({ type: 'missing_data', message: '缺少胶囊完整数据', action: 'download' });
+    }
+    if (!extractCodes || extractCodes.length === 0) {
+      status.issues.push({ type: 'missing_codes', message: '缺少提取码记录', action: 'recreate' });
+    }
+    if (!storedCapsule && capsule) {
+      status.issues.push({ type: 'missing_file', message: '本地缺少胶囊JSON文件', action: 'redownload' });
+    }
+    if (capsule && capsule.meta && capsule.meta.isPublic) {
+      status.isVisibleInPlaza = true;
+    } else {
+      status.isVisibleInPlaza = false;
+      if (capsule && !capsule.meta.isPublic) {
+        status.issues.push({ type: 'private', message: '胶囊为私密状态，仅本地可见', action: 'make_public' });
+      }
+    }
+
+    return status;
+  },
+
+  getAllMigrationStatus() {
+    const data = this.getData();
+    const result = {
+      capsules: [],
+      summary: {
+        total: 0,
+        visibleInPlaza: 0,
+        localOnly: 0,
+        hasIssues: 0,
+        missingData: 0,
+        missingCodes: 0,
+        missingFiles: 0
+      }
+    };
+
+    if (data.myCapsules) {
+      result.summary.total = data.myCapsules.length;
+      data.myCapsules.forEach(id => {
+        const status = this.getCapsuleMigrationStatus(id);
+        result.capsules.push(status);
+        
+        if (status.isVisibleInPlaza) {
+          result.summary.visibleInPlaza++;
+        } else {
+          result.summary.localOnly++;
+        }
+        
+        if (status.issues.length > 0) {
+          result.summary.hasIssues++;
+          status.issues.forEach(issue => {
+            if (issue.type === 'missing_data') result.summary.missingData++;
+            if (issue.type === 'missing_codes') result.summary.missingCodes++;
+            if (issue.type === 'missing_file') result.summary.missingFiles++;
+          });
+        }
+      });
+    }
+
+    return result;
+  },
+
+  createShareLink(capsuleId) {
+    const data = this.getData();
+    const capsule = data.capsuleData ? data.capsuleData[capsuleId] : null;
+    
+    if (!capsule || !capsule.meta || !capsule.meta.isPublic) {
+      return null;
+    }
+
+    const shareCode = TimeUtils.generateRandomCode(12);
+    const shareLink = {
+      id: shareCode,
+      capsuleId,
+      capsuleTitle: capsule.meta.title,
+      createdAt: TimeUtils.getCurrentTimestamp(),
+      lastSharedAt: TimeUtils.getCurrentTimestamp(),
+      shareCount: 1,
+      isActive: true,
+      url: `${window.location.origin}${window.location.pathname}?share=${shareCode}`
+    };
+
+    if (!data.shareLinks) {
+      data.shareLinks = {};
+    }
+    data.shareLinks[capsuleId] = shareLink;
+    this.saveData(data);
+    
+    return shareLink;
+  },
+
+  getShareLinks() {
+    const data = this.getData();
+    return data.shareLinks || {};
+  },
+
+  getShareLink(capsuleId) {
+    const data = this.getData();
+    return data.shareLinks ? data.shareLinks[capsuleId] : null;
+  },
+
+  revokeShareLink(capsuleId) {
+    const data = this.getData();
+    if (data.shareLinks && data.shareLinks[capsuleId]) {
+      data.shareLinks[capsuleId].isActive = false;
+      data.shareLinks[capsuleId].revokedAt = TimeUtils.getCurrentTimestamp();
+      this.saveData(data);
+      return true;
+    }
+    return false;
+  },
+
+  reactivateShareLink(capsuleId) {
+    const data = this.getData();
+    if (data.shareLinks && data.shareLinks[capsuleId]) {
+      data.shareLinks[capsuleId].isActive = true;
+      data.shareLinks[capsuleId].revokedAt = null;
+      data.shareLinks[capsuleId].lastSharedAt = TimeUtils.getCurrentTimestamp();
+      data.shareLinks[capsuleId].shareCount = (data.shareLinks[capsuleId].shareCount || 0) + 1;
+      this.saveData(data);
+      return true;
+    }
+    return false;
+  },
+
+  updateShareLinkUsage(capsuleId) {
+    const data = this.getData();
+    if (data.shareLinks && data.shareLinks[capsuleId]) {
+      data.shareLinks[capsuleId].lastSharedAt = TimeUtils.getCurrentTimestamp();
+      data.shareLinks[capsuleId].shareCount++;
+      this.saveData(data);
+      return data.shareLinks[capsuleId];
+    }
+    return null;
+  },
+
+  saveImportReport(report) {
+    const data = this.getData();
+    if (!data.importReports) {
+      data.importReports = [];
+    }
+    const reportWithId = {
+      ...report,
+      id: TimeUtils.generateRandomCode(8),
+      createdAt: TimeUtils.getCurrentTimestamp()
+    };
+    data.importReports.unshift(reportWithId);
+    if (data.importReports.length > 10) {
+      data.importReports = data.importReports.slice(0, 10);
+    }
+    this.saveData(data);
+    return reportWithId;
+  },
+
+  getImportReports() {
+    const data = this.getData();
+    return data.importReports || [];
   },
 
   compareVersions(v1, v2) {
@@ -287,7 +471,15 @@ const StorageUtils = {
         capsulesAdded: 0,
         capsulesSkipped: 0,
         likesUpdated: 0,
-        commentsAdded: 0
+        commentsAdded: 0,
+        extractCodesAdded: 0,
+        publicCapsulesSynced: 0
+      },
+      details: {
+        addedCapsules: [],
+        skippedCapsules: [],
+        mergedComments: [],
+        failedItems: []
       },
       errors: []
     };
@@ -298,32 +490,72 @@ const StorageUtils = {
       if (importedData.capsules) {
         Object.keys(importedData.capsules).forEach(id => {
           const imported = importedData.capsules[id];
+          const capsuleTitle = imported.title || '未知胶囊';
+          
           if (!currentData.capsules[id]) {
             currentData.capsules[id] = { ...imported };
-            result.stats.commentsAdded += (imported.comments || []).length;
-            result.stats.likesUpdated += imported.likes || 0;
+            const commentCount = (imported.comments || []).length;
+            const likeCount = imported.likes || 0;
+            result.stats.commentsAdded += commentCount;
+            result.stats.likesUpdated += likeCount;
+            result.details.addedCapsules.push({
+              id,
+              title: capsuleTitle,
+              comments: commentCount,
+              likes: likeCount
+            });
+            
+            if (commentCount > 0) {
+              result.details.mergedComments.push({
+                capsuleId: id,
+                capsuleTitle,
+                count: commentCount,
+                action: '新增'
+              });
+            }
           } else {
             const existing = currentData.capsules[id];
             const oldLikes = existing.likes || 0;
+            const likesBefore = existing.likes || 0;
             existing.likes = Math.max(oldLikes, imported.likes || 0);
+            
+            let likesDiff = 0;
             if (existing.likes > oldLikes) {
-              result.stats.likesUpdated += (existing.likes - oldLikes);
+              likesDiff = existing.likes - oldLikes;
+              result.stats.likesUpdated += likesDiff;
             }
+            
             existing.liked = existing.liked || imported.liked;
+            
+            let commentsAddedThis = 0;
             if (imported.comments && imported.comments.length > 0) {
               const existingCommentIds = new Set((existing.comments || []).map(c => c.id));
-              let addedCount = 0;
               imported.comments.forEach(comment => {
                 if (!existingCommentIds.has(comment.id)) {
                   if (!existing.comments) existing.comments = [];
                   existing.comments.push(comment);
-                  addedCount++;
+                  commentsAddedThis++;
                 }
               });
-              result.stats.commentsAdded += addedCount;
+              result.stats.commentsAdded += commentsAddedThis;
+              
+              if (commentsAddedThis > 0) {
+                result.details.mergedComments.push({
+                  capsuleId: id,
+                  capsuleTitle,
+                  count: commentsAddedThis,
+                  action: '合并'
+                });
+              }
             }
-            if (existing.likes === oldLikes && result.stats.commentsAdded === 0) {
+            
+            if (existing.likes === likesBefore && commentsAddedThis === 0) {
               result.stats.capsulesSkipped++;
+              result.details.skippedCapsules.push({
+                id,
+                title: capsuleTitle,
+                reason: '无更新内容'
+              });
             }
           }
         });
@@ -343,6 +575,9 @@ const StorageUtils = {
         Object.keys(importedData.capsuleData).forEach(id => {
           if (!currentData.capsuleData[id]) {
             currentData.capsuleData[id] = importedData.capsuleData[id];
+            if (importedData.capsuleData[id].meta && importedData.capsuleData[id].meta.isPublic) {
+              result.stats.publicCapsulesSynced++;
+            }
           }
         });
       }
@@ -352,6 +587,7 @@ const StorageUtils = {
         Object.keys(importedData.extractCodes).forEach(id => {
           if (!currentData.extractCodes[id]) {
             currentData.extractCodes[id] = importedData.extractCodes[id];
+            result.stats.extractCodesAdded++;
           }
         });
       }
@@ -361,6 +597,7 @@ const StorageUtils = {
         Object.keys(importedData.publicCapsulesData).forEach(id => {
           if (!currentData.capsuleData[id]) {
             currentData.capsuleData[id] = importedData.publicCapsulesData[id];
+            result.stats.publicCapsulesSynced++;
           }
           if (!currentData.myCapsules.includes(id) && importedData.publicCapsulesData[id].meta.isPublic) {
             currentData.myCapsules.push(id);
@@ -374,6 +611,10 @@ const StorageUtils = {
     } catch (e) {
       console.error('导入数据失败:', e);
       result.errors.push(e.message);
+      result.details.failedItems.push({
+        error: e.message,
+        timestamp: Date.now()
+      });
       return result;
     }
   },
